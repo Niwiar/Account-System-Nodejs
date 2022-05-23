@@ -4,8 +4,8 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
 const cookieSession = require('cookie-session');
-const userControl = require('./src/controllers/userController');
-const {validateLogin, validateRegister, validateEdit, validateAvatar} = require('./src/controllers/validator');
+
+const root = require('./src/routes/root');
 
 const app = express();
 
@@ -23,45 +23,12 @@ app.use(cookieSession({
     maxAge: 3600 * 1000 //1hr
 }));
 
-//Declare custom Middleware
-const ifNotLoggedIn = (req, res, next) => {
-    if (!req.session.isLoggedIn) {
-        return res.render('login');
-    }
-    next();
-}
-
-const ifLoggedIn = (req, res, next) => {
-    if (req.session.isLoggedIn) {
-        return res.redirect('/');
-    }
-    next();
-}
-
 app.use((req, res, next) => {
-    console.log('home route');
+    console.log(`${req.method} ${req.headers.origin} ${req.path}`);
     next();
 })
-app.get("/", ifNotLoggedIn, userControl.homePage);
 
-//register
-app.post("/register", ifLoggedIn, validateRegister, userControl.register);
-//login
-app.post('/login', ifLoggedIn, validateLogin, userControl.login)
-//edit
-app.post('/edit', validateEdit, userControl.edit)
-//upload avatar
-app.post('/uploadavatar', validateAvatar, userControl.changeAvatar)
-//logout
-app.get('/logout', (req, res, next) => {
-    req.session = null;
-    res.redirect('/')
-})
-//delete
-app.post('/delete', userControl.del)
+app.use('/', root)
 
-app.use('/', (req, res) => {
-    res.status(404).send('<h1>404 Not Found</h1>')
-})
 
 app.listen(config.port, () => console.log(`Server is listening on ${config.url}`))

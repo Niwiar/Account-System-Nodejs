@@ -27,7 +27,7 @@ const register = async (req, res, next) => {
     if (validation_result.isEmpty()) {
         bcrypt.hash(user_pass, 12).then(async (hash_pass) => {
             await userData.createUser(hash_pass, req.body)
-            .then(result => {
+            .then(() => {
                 res.send('Your account has been created, Now you can <a href="/">Login</a>')
             }).catch(err => {
                 if (err) throw err
@@ -75,13 +75,18 @@ const login = async (req, res, next) => {
     }
 }
 
+const logout = async (req, res, next) => {
+    req.session = null;
+    res.redirect('/')
+}
+
 const edit = async (req, res, next) => {
     const validation_result = validationResult(req);
     const {user_pass} = req.body;
     if(validation_result.isEmpty()) {
         bcrypt.hash(user_pass, 12).then(async (hash_pass) => {
             await userData.updateUser(hash_pass, req.body)
-            .then(result => {
+            .then(() => {
                 res.redirect('/');
             }).catch (err => {
                 if (err) throw err;
@@ -110,7 +115,8 @@ const edit = async (req, res, next) => {
 const del = async (req, res, next) => {
     try {
         let userId = req.session.userID;
-        const user = await userData.deleteUser(userId);
+        await userData.deleteUser(userId);
+        console.log('delete user completed')
         req.session = null;
         res.redirect('/');
     } catch (err) {
@@ -123,8 +129,6 @@ const changeAvatar = async (req, res, next) => {
     let userId = req.session.userID;
     let form = formidable({ multiples: true});
     form.parse(req, (err, fields, files) => {
-        console.log(fields);
-        console.log(files);
         let oldpath = files._avatar.filepath;
         let newpath = path.join(process.cwd(),"/public/img/user_avatar/",`${userId}.png`);
         fs.move(oldpath, newpath, { overwrite: true}, (err) => {
@@ -144,6 +148,7 @@ module.exports = {
     homePage,
     register,
     login,
+    logout,
     edit,
     del,
     changeAvatar
