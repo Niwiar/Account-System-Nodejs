@@ -17,9 +17,14 @@
                 <div class="col-md-6" >
                     <img src="<%=avatar_url %>" class="avatar card-img-top mt-3">
                     <h2 class="mt-2">ID: <%=id %></h2>
-                    <form action="/upload" method="post" class="row g-1 justify-content-center">
+                    <form action="/uploadavatar" enctype="multipart/form-data" method="post" class="row g-1 justify-content-center">
                         <input style="max-width: 200px"  class="form-control form-control-sm" type="file" name="_avatar">
                         <button style="max-width: 150px" type="submit" class="btn btn-outline-secondary mt-1 p-1">Change Avatar</button>
+                        <% if (locals.avatar_error) {
+                            avatar_error.forEach(function(error_msg) { %>
+                            <div class="alert alert-danger" role="alert"><%= error_msg %></div>
+                        <% })
+                    } %>
                     </form>
                 </div>
                 <div class="col-md-6">
@@ -39,6 +44,11 @@
                                 <input type="password" name="user_pass" class="form-control" id="_pass" placeholder="Password" value="">
                                 <label for="_pass">Password</label>
                             </div>
+                            <% if (locals.edit_error) {
+                                edit_error.forEach(function(error_msg) { %>
+                                <div class="alert alert-danger" role="alert"><%= error_msg %></div>
+                            <% })
+                        } %>
                             <button type="submit" class="btn btn-warning">Edit Account</button>
                             <a href="/logout" class="btn btn-danger">Logout</a>
                         </form>

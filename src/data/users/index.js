@@ -56,7 +56,23 @@ const updateUser = async (pass, user) => {
             .input('password', sql.NVarChar(255), pass)
             .input('email', sql.NVarChar(50), user.user_email)
             .query(sqlQueries.updateUser);
+        console.log(editedUser.recordset)
         return editedUser.recordset
+    } catch (err) {
+        return err.message
+    }
+}
+
+const updateAvatar = async (userId) => {
+    try {
+        const url = `./img/user_avatar/${userId}.png`
+        const pool = await sql.connect(config.sql);
+        const sqlQueries = await utils.loadSqlQueries('users');
+        const changedAvater = await pool.request()
+            .input('url', sql.NVarChar(255), url)
+            .input('userId', sql.Int, userId)
+            .query(sqlQueries.updateUserAvatar);
+        return changedAvater.recordset
     } catch (err) {
         return err.message
     }
@@ -80,5 +96,6 @@ module.exports = {
     createUser,
     findEmail,
     updateUser,
-    deleteUser
+    deleteUser,
+    updateAvatar
 }

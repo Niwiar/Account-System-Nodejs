@@ -29,3 +29,7 @@ exports.validateEdit = [
     body('user_pass', 'The password must be of minimum length 6 characters').trim().isLength({min: 6})
 ];
 
+exports.validateAvatar = [
+    body('_avatar', 'No file upload!!').trim().not().isEmpty()
+];
+

@@ -1,6 +1,9 @@
 const userData = require('../data/users');
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
+const fs = require('fs-extra');
+const formidable = require('formidable');
+const path = require('path');
 
 const homePage = async (req, res, next) => {
     try {
@@ -90,8 +93,15 @@ const edit = async (req, res, next) => {
         let allErrors = validation_result.errors.map((error) => {
             return error.msg;
         })
-        res.render('login', {
-            register_error: allErrors,
+        let userId = req.session.userID;
+        const user = await userData.getUser(userId);
+        res.render('home', {
+            id: user[0].userId,
+            username: user[0].username,
+            email: user[0].email,
+            password: user[0].password,
+            avatar_url: user[0].avatar_url,
+            edit_error: allErrors,
             old_data: req.body
         })
     }
@@ -102,7 +112,29 @@ const del = async (req, res, next) => {
         let userId = req.session.userID;
         const user = await userData.deleteUser(userId);
         req.session = null;
-        res.redirect('/')
+        res.redirect('/');
+    } catch (err) {
+        res.status(400).send(err.message);
+    }
+}
+
+const changeAvatar = async (req, res, next) => {
+    const validation_result = validationResult(req);
+    let userId = req.session.userID;
+    let form = formidable({ multiples: true});
+    form.parse(req, (err, fields, files) => {
+        console.log(fields);
+        console.log(files);
+        let oldpath = files._avatar.filepath;
+        let newpath = path.join(process.cwd(),"/public/img/user_avatar/",`${userId}.png`);
+        fs.move(oldpath, newpath, { overwrite: true}, (err) => {
+            if (err) throw err;
+            console.log('upload avatar completed')
+        })
+    })
+    try {
+        await userData.updateAvatar(userId);
+        res.redirect('/');
     } catch (err) {
         res.status(400).send(err.message);
     }
@@ -113,5 +145,6 @@ module.exports = {
     register,
     login,
     edit,
-    del
+    del,
+    changeAvatar
 }

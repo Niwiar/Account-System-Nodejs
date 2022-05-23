@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const cookieSession = require('cookie-session');
 const userControl = require('./src/controllers/userController');
-const {validateLogin, validateRegister, validateEdit} = require('./src/controllers/validator');
+const {validateLogin, validateRegister, validateEdit, validateAvatar} = require('./src/controllers/validator');
 
 const app = express();
 
@@ -50,6 +50,8 @@ app.post("/register", ifLoggedIn, validateRegister, userControl.register);
 app.post('/login', ifLoggedIn, validateLogin, userControl.login)
 //edit
 app.post('/edit', validateEdit, userControl.edit)
+//upload avatar
+app.post('/uploadavatar', validateAvatar, userControl.changeAvatar)
 //logout
 app.get('/logout', (req, res, next) => {
     req.session = null;
