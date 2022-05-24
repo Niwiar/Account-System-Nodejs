@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const userControl = require('../controllers/userController');
-const {validateLogin, validateRegister, validateEdit, validateAvatar} = require('../controllers/validator');
+const tokenControl = require('../controllers/refreshTokenController');
+const { validateLogin, validateRegister, validateAvatar } = require('../controllers/validator');
 
 //Declare custom Middleware
 const ifNotLoggedIn = (req, res, next) => {
@@ -25,18 +26,14 @@ router.get("/", ifNotLoggedIn, userControl.homePage);
 router.post("/register", ifLoggedIn, validateRegister, userControl.register);
 //Login
 router.post('/login', ifLoggedIn, validateLogin, userControl.login);
-//Edit
-router.post('/edit', validateEdit, userControl.edit);
-//Upload avatar
-router.post('/uploadavatar', validateAvatar, userControl.changeAvatar);
 //Logout
 router.get('/logout', userControl.logout);
 //Delete
 router.post('/delete', userControl.del);
-
-router.use('/', (req, res) => {
-    res.status(404).send('<h1>404 Not Found</h1>')
-});
+//Upload avatar
+router.post('/uploadavatar', validateAvatar, userControl.changeAvatar);
+//refresh
+router.get('/refresh', tokenControl.refreshToken);
 
 
 module.exports = router;

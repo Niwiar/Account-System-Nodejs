@@ -7,6 +7,7 @@ exports.validateLogin = [
         if (emailCheck.length === 1) {
             return true
         }
+        //Unauthorized
         return Promise.reject('Invalid Email Address');
     }),
     body('user_pass', 'Password is empty').trim().not().isEmpty()

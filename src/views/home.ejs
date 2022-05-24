@@ -44,6 +44,10 @@
                                 <input type="password" name="user_pass" class="form-control" id="_pass" placeholder="Password" value="">
                                 <label for="_pass">Password</label>
                             </div>
+                            <div class="form-floating mb-2">
+                                <input type="text" name="token" class="form-control" id="_token" placeholder="BEARER TOKEN" value="">
+                                <label for="_token">Bearer Token</label>
+                            </div>
                             <% if (locals.edit_error) {
                                 edit_error.forEach(function(error_msg) { %>
                                 <div class="alert alert-danger" role="alert"><%= error_msg %></div>

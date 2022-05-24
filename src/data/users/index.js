@@ -18,7 +18,6 @@ const getUser = async (userId) => {
 
 const createUser = async (pass, user) => {
     try {
-        console.log(user)
         const avatarStd = "./img/user_avatar/0.png";
         const pool = await sql.connect(config.sql);
         const sqlQueries = await utils.loadSqlQueries('users');
@@ -91,11 +90,54 @@ const deleteUser = async (userId) => {
     }
 }
 
+const updateToken = async (email, token) => {
+    try {
+        const pool = await sql.connect(config.sql);
+        const sqlQueries = await utils.loadSqlQueries('users');
+        const addToken = await pool.request()
+            .input('email', sql.NVarChar(50), email)
+            .input('token', sql.NVarChar(255), token)
+            .query(sqlQueries.updateToken);
+        return addToken.recordset
+    } catch (err) {
+        return err.message
+    }
+}
+
+const findToken = async (token) => {
+    try {
+        const pool = await sql.connect(config.sql);
+        const sqlQueries = await utils.loadSqlQueries('users');
+        const found = await pool.request()
+            .input('token', sql.NVarChar(255), token)
+            .query(sqlQueries.getToken);
+        return found.recordset
+    } catch (err) {
+        return err.message
+    }
+}
+
+const deleteToken = async (token) => {
+    try {
+        const pool = await sql.connect(config.sql);
+        const sqlQueries = await utils.loadSqlQueries('users');
+        const deleted = await pool.request()
+            .input('token', sql.NVarChar(255), token)
+            .query(sqlQueries.deleteToken);
+        return deleted.recordset
+    } catch (err) {
+        return err.message
+    }
+}
+
 module.exports = {
     getUser,
     createUser,
     findEmail,
     updateUser,
     deleteUser,
-    updateAvatar
+    updateAvatar,
+    updateToken,
+    findToken,
+    deleteToken
 }

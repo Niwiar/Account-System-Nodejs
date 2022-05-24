@@ -4,6 +4,8 @@ const bcrypt = require('bcryptjs');
 const fs = require('fs-extra');
 const formidable = require('formidable');
 const path = require('path');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 const homePage = async (req, res, next) => {
     try {
@@ -23,11 +25,27 @@ const homePage = async (req, res, next) => {
 
 const register = async (req, res, next) => {
     const validation_result = validationResult(req);
-    const {user_pass} = req.body;
+    const {user_pass, user_email} = req.body;
     if (validation_result.isEmpty()) {
+        //encrypt password
         bcrypt.hash(user_pass, 12).then(async (hash_pass) => {
             await userData.createUser(hash_pass, req.body)
-            .then(() => {
+            .then(async (result) => {
+                //jwt authentication
+                const user = await userData.getUser(result[0].userId);
+                const token = jwt.sign(
+                    {  
+                        user_id: user[0].userId,
+                        user_email: user[0].user_email
+                    },
+                    // config.token,
+                    {
+                        expiresIn: "2h"
+                    }
+                )
+                user[0].token = token;
+                console.log(user)
+
                 res.send('Your account has been created, Now you can <a href="/">Login</a>')
             }).catch(err => {
                 if (err) throw err
@@ -50,21 +68,36 @@ const login = async (req, res, next) => {
     const validation_result = validationResult(req);
     const {user_pass, user_email} = req.body;
     if (validation_result.isEmpty()) {
+        //auth & evaluate password
         const user = await userData.findEmail(user_email)
-        bcrypt.compare(user_pass, user[0].password)
-        .then(compare_result => {
-            if (compare_result) {
-                req.session.isLoggedIn = true;
-                req.session.userID = user[0].userId;
-                res.redirect('/');
-            } else {
-                res.render('login',{
-                    login_error: ['Invalid Password']
-                })
-            }
-        }).catch (err => {
-            if (err) throw err;
-        })
+        const compared =  await bcrypt.compare(user_pass, user[0].password)
+        if (compared) {
+            //session authentication
+            req.session.isLoggedIn = true;
+            req.session.userID = user[0].userId;
+            //jwt authentication
+            const accessToken = jwt.sign(
+                { "user_email": user_email },
+                process.env.ACCESS_TOKEN_SECRET,
+                { expiresIn: '30s' }
+            );
+            const refreshToken = jwt.sign(
+                { "user_email": user_email },
+                process.env.REFRESH_TOKEN_SECRET,
+                { expiresIn: '1d' }
+            );
+            const userToken = await userData.updateToken(user_email, refreshToken);
+            console.log(userToken)
+            res.cookie('jwt', refreshToken, {httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 3600 * 1000})
+            // res.json({ accessToken });
+            console.log( accessToken )
+
+            res.redirect('/');
+        } else {
+            res.render('login',{
+                login_error: ['Invalid Password']
+            })
+        }
     } else {
         let allErrors = validation_result.errors.map((error) => {
             return error.msg;
@@ -77,6 +110,19 @@ const login = async (req, res, next) => {
 
 const logout = async (req, res, next) => {
     req.session = null;
+    const cookies = req.cookies;
+    if (!cookies.jwt) return res.sendStatus(204); //No content
+    //find token
+    const refreshToken = cookies.jwt;
+    const user = await userData.findToken(refreshToken)
+    if (!user.length) {
+        res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true});
+        return res.sendStatus(204);
+    }
+    //del token
+    const userToken = await userData.deleteToken(refreshToken);
+    console.log(userToken)
+    res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true});
     res.redirect('/')
 }
 
@@ -125,7 +171,6 @@ const del = async (req, res, next) => {
 }
 
 const changeAvatar = async (req, res, next) => {
-    const validation_result = validationResult(req);
     let userId = req.session.userID;
     let form = formidable({ multiples: true});
     form.parse(req, (err, fields, files) => {

@@ -1,5 +1,5 @@
 UPDATE users
-SET username = @username, password = @password
+SET token = @token
 WHERE email = @email
 SELECT * FROM users
 WHERE email = @email
