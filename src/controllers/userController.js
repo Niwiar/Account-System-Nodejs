@@ -9,6 +9,8 @@ require('dotenv').config();
 
 const homePage = async (req, res, next) => {
     try {
+        // req.session = null;
+        // res.redirect('/');
         let userId = req.session.userID;
         const user = await userData.getUser(userId);
         res.render('home', {
@@ -25,27 +27,12 @@ const homePage = async (req, res, next) => {
 
 const register = async (req, res, next) => {
     const validation_result = validationResult(req);
-    const {user_pass, user_email} = req.body;
+    const {user_pass} = req.body;
     if (validation_result.isEmpty()) {
         //encrypt password
         bcrypt.hash(user_pass, 12).then(async (hash_pass) => {
             await userData.createUser(hash_pass, req.body)
             .then(async (result) => {
-                //jwt authentication
-                const user = await userData.getUser(result[0].userId);
-                const token = jwt.sign(
-                    {  
-                        user_id: user[0].userId,
-                        user_email: user[0].user_email
-                    },
-                    // config.token,
-                    {
-                        expiresIn: "2h"
-                    }
-                )
-                user[0].token = token;
-                console.log(user)
-
                 res.send('Your account has been created, Now you can <a href="/">Login</a>')
             }).catch(err => {
                 if (err) throw err
@@ -71,23 +58,36 @@ const login = async (req, res, next) => {
         //auth & evaluate password
         const user = await userData.findEmail(user_email)
         const compared =  await bcrypt.compare(user_pass, user[0].password)
+        console.log(user)
         if (compared) {
+            const roles = Object.values(JSON.parse(user[0].roles));
+            console.log(roles)
             //session authentication
             req.session.isLoggedIn = true;
             req.session.userID = user[0].userId;
             //jwt authentication
             const accessToken = jwt.sign(
-                { "user_email": user_email },
+                { 
+                    "userInfo": {
+                        "user_email": user_email,
+                        "user_roles": roles
+                    }
+                },
                 process.env.ACCESS_TOKEN_SECRET,
-                { expiresIn: '30s' }
+                { expiresIn: '1min' }
             );
             const refreshToken = jwt.sign(
-                { "user_email": user_email },
+                { 
+                    "userInfo": {
+                        "user_email": user_email,
+                        "user_roles": roles
+                    } 
+                },
                 process.env.REFRESH_TOKEN_SECRET,
                 { expiresIn: '1d' }
             );
             const userToken = await userData.updateToken(user_email, refreshToken);
-            console.log(userToken)
+            // console.log(userToken)
             res.cookie('jwt', refreshToken, {httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 3600 * 1000})
             // res.json({ accessToken });
             console.log( accessToken )

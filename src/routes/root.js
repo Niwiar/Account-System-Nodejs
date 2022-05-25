@@ -28,8 +28,6 @@ router.post("/register", ifLoggedIn, validateRegister, userControl.register);
 router.post('/login', ifLoggedIn, validateLogin, userControl.login);
 //Logout
 router.get('/logout', userControl.logout);
-//Delete
-router.post('/delete', userControl.del);
 //Upload avatar
 router.post('/uploadavatar', validateAvatar, userControl.changeAvatar);
 //refresh

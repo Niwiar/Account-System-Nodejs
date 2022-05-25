@@ -26,6 +26,9 @@
                         <% })
                     } %>
                     </form>
+                    <form action="/refresh" method="get" class="row g-1 justify-content-center">
+                        <button style="max-width: 150px" type="submit" class="btn btn-outline-secondary mt-1 p-1">Refresh Token</button>
+                    </form>
                 </div>
                 <div class="col-md-6">
                     <div class="card-body">
@@ -45,8 +48,8 @@
                                 <label for="_pass">Password</label>
                             </div>
                             <div class="form-floating mb-2">
-                                <input type="text" name="token" class="form-control" id="_token" placeholder="BEARER TOKEN" value="">
-                                <label for="_token">Bearer Token</label>
+                                <input type="text" name="token" class="form-control" id="token1" placeholder="BEARER TOKEN" value="">
+                                <label for="token1">Bearer Token</label>
                             </div>
                             <% if (locals.edit_error) {
                                 edit_error.forEach(function(error_msg) { %>
@@ -57,7 +60,18 @@
                             <a href="/logout" class="btn btn-danger">Logout</a>
                         </form>
                         <form action="/delete" method="post">
+                            <div class="form-floating mb-2">
+                                <input type="text" name="token" class="form-control" id="token2" placeholder="BEARER TOKEN" value="">
+                                <label for="token2">Bearer Token</label>
+                            </div>
                             <button type="submit" class="btn btn-dark mt-2">Delete Account</button>
+                        </form>
+                        <form action="/admin" method="get">
+                            <div class="form-floating mb-2">
+                                <input type="text" name="token" class="form-control" id="token3" placeholder="BEARER TOKEN" value="">
+                                <label for="token3">Bearer Token</label>
+                            </div>
+                            <button type="submit" class="btn btn-dark mt-2">User list</button>
                         </form>
                     </div>
                 </div>

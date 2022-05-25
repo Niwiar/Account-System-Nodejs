@@ -22,6 +22,7 @@ const createUser = async (pass, user) => {
         const pool = await sql.connect(config.sql);
         const sqlQueries = await utils.loadSqlQueries('users');
         const insertUser = await pool.request()
+            .input('roles', sql.NVarChar(255), JSON.stringify({ "User": 2000, "Editor": 9500, "Admin": 1150 }))
             .input('username', sql.NVarChar(50), user.user_name)
             .input('email',sql.NVarChar(50), user.user_email)
             .input('password', sql.NVarChar(255), pass)
@@ -96,7 +97,7 @@ const updateToken = async (email, token) => {
         const sqlQueries = await utils.loadSqlQueries('users');
         const addToken = await pool.request()
             .input('email', sql.NVarChar(50), email)
-            .input('token', sql.NVarChar(255), token)
+            .input('token', sql.NVarChar(400), token)
             .query(sqlQueries.updateToken);
         return addToken.recordset
     } catch (err) {
@@ -109,7 +110,7 @@ const findToken = async (token) => {
         const pool = await sql.connect(config.sql);
         const sqlQueries = await utils.loadSqlQueries('users');
         const found = await pool.request()
-            .input('token', sql.NVarChar(255), token)
+            .input('token', sql.NVarChar(400), token)
             .query(sqlQueries.getToken);
         return found.recordset
     } catch (err) {
@@ -122,11 +123,23 @@ const deleteToken = async (token) => {
         const pool = await sql.connect(config.sql);
         const sqlQueries = await utils.loadSqlQueries('users');
         const deleted = await pool.request()
-            .input('token', sql.NVarChar(255), token)
+            .input('token', sql.NVarChar(400), token)
             .query(sqlQueries.deleteToken);
         return deleted.recordset
     } catch (err) {
         return err.message
+    }
+}
+
+const getUsers = async () => {
+    try {
+        const pool = await sql.connect(config.sql);
+        const sqlQueries = await utils.loadSqlQueries('users');
+        const user = await pool.request()
+            .query(sqlQueries.getUsers);
+        return user.recordset;
+    } catch (error) {
+        return error.message;
     }
 }
 
@@ -139,5 +152,6 @@ module.exports = {
     updateAvatar,
     updateToken,
     findToken,
-    deleteToken
+    deleteToken,
+    getUsers
 }

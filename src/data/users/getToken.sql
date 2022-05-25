@@ -3,6 +3,7 @@ SELECT userId,
        email,
        password,
        avatar_url,
-       token
+       token,
+       roles
 FROM users
 WHERE token = @token
